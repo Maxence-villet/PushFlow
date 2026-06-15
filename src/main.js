@@ -4427,6 +4427,7 @@ async function startApplication() {
       soundWarning.pause();
       soundWarning.currentTime = 0;
     }).catch(() => {});
+    
     const vision = await Zo.forVisionTasks("./wasm");
     poseLandmarker = await Zc.createFromOptions(vision, {
       baseOptions: {
