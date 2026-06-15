@@ -13,9 +13,9 @@ let poseLandmarker: PoseLandmarker;
 let lastVideoTime = -1;
 
 // --- Système Audio ---
-const soundSuccess = new Audio("/sounds/success.mp3");
+const soundSuccess = new Audio("./sounds/success.mp3");
 soundSuccess.volume = 0.75;
-const soundWarning = new Audio("/sounds/warning.mp3");
+const soundWarning = new Audio("./sounds/warning.mp3");
 
 // --- Variables d'état de l'exercice ---
 let pushUpCount = 0;
