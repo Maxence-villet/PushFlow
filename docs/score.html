@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Votre Score - PushFlow</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&display=swap');
+    
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', system_ui, sans-serif;
+    }
+    
+    .title-font {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Conteneur des confettis : derrière tout le contenu */
+    .confetti-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #f00;
+      opacity: 0.7;
+      animation: fall linear forwards;
+      will-change: transform;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* Contenu principal au-dessus des confettis */
+    .content {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Footer avec bordure */
+    .footer {
+      border-top: 1px solid rgba(0,0,0,0.1);
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      padding: 1rem 0;
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #6b7280;
+      background-color: rgba(255,255,255,0.5);
+      backdrop-filter: blur(2px);
+      border-radius: 2rem;
+      width: 100%;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-sky-50 via-white to-blue-50 min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="confetti-background" id="confettiBackground"></div>
+
+  <div class="w-full max-w-md mx-auto content">
+    <!-- Header -->
+    <div class="flex justify-center items-center py-6">
+      <div class="flex items-center gap-x-3">
+        <div class="w-9 h-9 bg-cyan-500 rounded-2xl flex items-center justify-center shadow-inner">
+          <span class="text-white text-2xl leading-none mt-0.5">🏆</span>
+        </div>
+        <div>
+          <h1 class="title-font text-2xl font-semibold tracking-tighter text-slate-900">PushFlow</h1>
+          <p class="text-xs text-slate-500 -mt-1">Résultat final</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Score Card -->
+    <div class="bg-white rounded-3xl shadow-2xl p-8 border border-slate-100 text-center">
+      <div class="mb-6">
+        <div class="text-emerald-500 text-sm font-medium flex items-center gap-x-1 justify-center mb-2">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </span>
+          SESSION COMPLÉTÉE
+        </div>
+        <h2 class="text-3xl title-font font-bold text-slate-800">Votre performance</h2>
+      </div>
+
+      <div class="relative inline-flex items-center justify-center mb-8">
+        <div class="text-center">
+          <span id="score-value" class="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600 tabular-nums">0</span>
+          <span class="text-3xl font-semibold text-slate-400 ml-2">pompes</span>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-slate-50 rounded-2xl p-4">
+          <div class="flex justify-between text-sm text-slate-600">
+            <span>💪 Objectif</span>
+            <span class="font-medium">2 minutes</span>
+          </div>
+          <div class="flex justify-between text-sm text-slate-600 mt-2">
+            <span>🎯 Rythme moyen</span>
+            <span id="pace" class="font-medium">-- pompes/min</span>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <a href="index.html" 
+             class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 active:scale-[0.98] transition-all text-white font-semibold text-lg py-4 rounded-2xl shadow-lg shadow-cyan-500/30 text-center">
+            Recommencer
+          </a>
+          <button id="share-btn" 
+                  class="bg-white border-2 border-cyan-200 hover:border-cyan-300 text-cyan-700 font-semibold text-lg py-4 rounded-2xl transition-all px-4">
+            Partager
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer avec bordure, copyright et créateur -->
+    <div class="footer">
+      <p>© 2026 PushFlow — Créé par <span class="font-medium text-slate-700">Maxence-Villet</span></p>
+      <p class="text-[0.65rem] mt-1 opacity-70">Tous droits réservés</p>
+    </div>
+  </div>
+
+  <script>
+    // ========== CONFETTIS INFINIS 2 FOIS PLUS DENSES ==========
+    const confettiContainer = document.getElementById('confettiBackground');
+    const colors = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#f9c74f', '#90be6d', '#43aa8b', '#4d908e', '#577590', '#9b5de5', '#f15bb5', '#fee440'];
+
+    function createConfetti() {
+      const conf = document.createElement('div');
+      conf.classList.add('confetti');
+      const size = Math.random() * 12 + 4;
+      conf.style.width = `${size}px`;
+      conf.style.height = `${size}px`;
+      conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      
+      conf.style.left = Math.random() * 100 + '%';
+      const startY = Math.random() * 100 - 10;
+      conf.style.top = startY + '%';
+      
+      const duration = Math.random() * 2.5 + 1.5;
+      conf.style.animationDuration = `${duration}s`;
+      const delay = Math.random() * 0.5;
+      conf.style.animationDelay = `${delay}s`;
+      
+      confettiContainer.appendChild(conf);
+      
+      conf.addEventListener('animationend', () => {
+        conf.remove();
+      });
+    }
+
+    setInterval(() => {
+      const count = Math.floor(Math.random() * 15) + 6;
+      for (let i = 0; i < count; i++) {
+        createConfetti();
+      }
+    }, 250);
+  </script>
+
+  <script>
+    // ========== AFFICHAGE DU SCORE ==========
+    const urlParams = new URLSearchParams(window.location.search);
+    let score = parseInt(urlParams.get('score'), 10);
+    if (isNaN(score)) score = 0;
+
+    const scoreSpan = document.getElementById('score-value');
+    scoreSpan.innerText = score;
+
+    const sessionDurationSeconds = 120;
+    const pace = (score / sessionDurationSeconds) * 60;
+    const paceEl = document.getElementById('pace');
+    paceEl.innerText = `${Math.round(pace)} pompes/min`;
+
+    function animateValue(element, start, end, duration) {
+      const range = end - start;
+      const increment = range / (duration / 16);
+      let current = start;
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= end) {
+          clearInterval(timer);
+          element.innerText = end;
+        } else {
+          element.innerText = Math.round(current);
+        }
+      }, 16);
+    }
+    animateValue(scoreSpan, 0, score, 800);
+
+    const shareBtn = document.getElementById('share-btn');
+    shareBtn.addEventListener('click', () => {
+      if (navigator.share) {
+        navigator.share({
+          title: 'PushFlow - Mon score',
+          text: `J'ai réalisé ${score} pompes en 30 secondes ! Et toi ?`,
+          url: window.location.origin
+        }).catch(() => {});
+      } else {
+        alert(`Score : ${score} pompes ! Copiez ce résultat.`);
+      }
+    });
+  </script>
+</body>
+</html>
