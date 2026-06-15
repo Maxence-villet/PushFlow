@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Assistant Push-Up AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&display=swap');
+      
+      * { box-sizing: border-box; }
+      
+      body {
+        font-family: 'Inter', system_ui, sans-serif;
+      }
+      
+      .title-font {
+        font-family: 'Space Grotesk', sans-serif;
+      }
+
+      .camera-frame {
+        box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.15);
+      }
+
+      .scan-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.6), transparent);
+        animation: scan 4s linear infinite;
+        pointer-events: none;
+        opacity: 0.35;
+      }
+
+      @keyframes scan {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(800%); }
+      }
+
+      /* Confettis */
+      .confetti-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1000;
+        overflow: hidden;
+      }
+      .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #f00;
+        opacity: 0.9;
+        animation: fall linear forwards;
+      }
+      @keyframes fall {
+        0% {
+          transform: translateY(-20vh) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotate(720deg);
+          opacity: 0;
+        }
+      }
+
+      /* Footer avec bordure (identique à score.html) */
+      .footer {
+        border-top: 1px solid rgba(0,0,0,0.1);
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        padding: 0.75rem 0;
+        margin-top: 1rem;
+        text-align: center;
+        font-size: 0.7rem;
+        color: #6b7280;
+        background-color: rgba(255,255,255,0.5);
+        backdrop-filter: blur(2px);
+        border-radius: 2rem;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body class="bg-gradient-to-br from-sky-50 via-white to-blue-50 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-md mx-auto flex flex-col min-h-screen justify-between">
+      <!-- Header -->
+      <div class="flex justify-between items-center py-4">
+        <div class="flex items-center gap-x-3">
+          <div class="w-9 h-9 bg-cyan-500 rounded-2xl flex items-center justify-center shadow-inner">
+            <span class="text-white text-2xl leading-none mt-0.5">🧘</span>
+          </div>
+          <div>
+            <h1 class="title-font text-2xl font-semibold tracking-tighter text-slate-900">PushFlow</h1>
+            <p class="text-xs text-slate-500 -mt-1">Assistant IA Posture</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-x-2 text-slate-400">
+          <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+          <span class="text-sm font-medium">En direct</span>
+        </div>
+      </div>
+
+      <!-- Camera Container -->
+      <div class="relative mx-auto camera-frame rounded-3xl overflow-hidden border-8 border-white bg-white shadow-2xl" 
+           style="width: 100%; max-width: 380px; aspect-ratio: 4 / 3;">
+        
+        <div id="video-container" class="relative w-full h-full bg-slate-950">
+          <video id="webcam" autoplay playsinline muted class="w-full h-full object-cover"></video>
+          <canvas id="output_canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+          
+          <div class="absolute inset-0 border-2 border-cyan-300/30 rounded-2xl pointer-events-none"></div>
+          <div class="scan-line"></div>
+          
+          <div class="absolute top-4 left-4 w-5 h-5 border-l-2 border-t-2 border-white/70 rounded-tl-xl"></div>
+          <div class="absolute top-4 right-4 w-5 h-5 border-r-2 border-t-2 border-white/70 rounded-tr-xl"></div>
+          <div class="absolute bottom-4 left-4 w-5 h-5 border-l-2 border-b-2 border-white/70 rounded-bl-xl"></div>
+          <div class="absolute bottom-4 right-4 w-5 h-5 border-r-2 border-b-2 border-white/70 rounded-br-xl"></div>
+        </div>
+      </div>
+
+      <!-- Info Panel -->
+      <div class="mt-6 bg-white rounded-3xl shadow-xl p-6 border border-slate-100">
+        <div class="flex items-center justify-between mb-4">
+          <div id="counter" class="text-7xl font-semibold tracking-tighter text-slate-900 tabular-nums">0</div>
+          
+          <div class="text-right">
+            <div class="text-emerald-600 text-sm font-medium flex items-center gap-x-1 justify-end">
+              <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              EN COURS
+            </div>
+            <p id="status" class="text-slate-600 text-sm mt-1 leading-tight">Prêt à commencer</p>
+          </div>
+        </div>
+        
+        <div class="space-y-2">
+          <div class="flex justify-between text-xs text-slate-500">
+            <span>Session</span>
+            <span id="time-left">2:00</span>
+          </div>
+          <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div id="progress-bar" 
+                 class="h-2 bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 w-full transition-all duration-200 ease-linear">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Start Button + Footer -->
+      <div class="mt-6 pb-4">
+        <button id="btn-start"
+                class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 active:scale-[0.985] transition-all text-white font-semibold text-lg py-5 rounded-2xl shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-x-3">
+          <span>Démarrer la Session</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 12h14" />
+          </svg>
+        </button>
+        
+        <p class="text-center text-slate-400 text-xs mt-4">Placez-vous de profil • Caméra activée</p>
+        
+        <!-- Footer copyright -->
+        <div class="footer">
+          <p>© 2026 PushFlow — Créé par <span class="font-medium text-slate-700">Maxence-villet</span></p>
+          <p class="text-[0.6rem] mt-1 opacity-70">Tous droits réservés</p>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+
+    <script>
+      // === Sons ===
+      const soundSuccess = new Audio("/sounds/success.mp3");
+      const soundEnd = new Audio("/sounds/end-session.mp3");
+      soundSuccess.volume = 0.8;
+      soundEnd.volume = 0.9;
+
+      let timerInterval = null;
+      let isSessionActive = false;
+      let finalPushUpCount = 0;
+      let confettiInterval = null;
+      let counterObserver = null;
+
+      const SESSION_DURATION = 120; // 2 minutes
+
+      function getCurrentPushUpCount() {
+        const counterEl = document.getElementById('counter');
+        return counterEl ? parseInt(counterEl.innerText, 120) : 0;
+      }
+
+      function launchConfettiWave() {
+        const container = document.createElement('div');
+        container.className = 'confetti-container';
+        document.body.appendChild(container);
+
+        const colors = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#f9c74f', '#90be6d', '#43aa8b', '#4d908e', '#577590', '#9b5de5', '#f15bb5', '#fee440'];
+        const numberOfConfetti = 80;
+
+        for (let i = 0; i < numberOfConfetti; i++) {
+          const conf = document.createElement('div');
+          conf.className = 'confetti';
+          const size = Math.random() * 10 + 5;
+          conf.style.width = `${size}px`;
+          conf.style.height = `${size}px`;
+          conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          conf.style.left = Math.random() * 100 + '%';
+          conf.style.animationDuration = Math.random() * 2.5 + 1.2 + 's';
+          conf.style.animationDelay = Math.random() * 1 + 's';
+          container.appendChild(conf);
+        }
+      }
+
+      function startContinuousConfetti() {
+        if (confettiInterval) clearInterval(confettiInterval);
+        launchConfettiWave();
+        confettiInterval = setInterval(() => {
+          launchConfettiWave();
+        }, 800);
+      }
+
+      function stopContinuousConfetti() {
+        if (confettiInterval) {
+          clearInterval(confettiInterval);
+          confettiInterval = null;
+        }
+      }
+
+      function freezeCounter() {
+        const counterElement = document.getElementById('counter');
+        if (!counterElement) return;
+        finalPushUpCount = parseInt(counterElement.innerText, 10) || 0;
+        if (counterObserver) counterObserver.disconnect();
+        counterObserver = new MutationObserver(() => {
+          if (counterElement.innerText !== finalPushUpCount.toString()) {
+            counterElement.innerText = finalPushUpCount;
+          }
+        });
+        counterObserver.observe(counterElement, { childList: true, subtree: true, characterData: true });
+        window.SESSION_ENDED = true;
+      }
+
+      function playSoundAndRedirect(audio, redirectUrl, score) {
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log("Erreur lecture son:", e));
+        
+        audio.onended = () => {
+          stopContinuousConfetti();
+          window.location.href = `${redirectUrl}?score=${score}`;
+        };
+      }
+
+      function startSessionTimer() {
+        if (isSessionActive) {
+          console.warn("Session déjà en cours, ignoré");
+          return;
+        }
+        
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        
+        isSessionActive = true;
+        
+        const progressBar = document.getElementById('progress-bar');
+        const timeLeftEl = document.getElementById('time-left');
+        let timeLeft = SESSION_DURATION;
+        
+        progressBar.style.width = '100%';
+        
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          
+          const minutes = Math.floor(timeLeft / 60);
+          const seconds = timeLeft % 60;
+          timeLeftEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+          
+          const progress = (timeLeft / SESSION_DURATION) * 100;
+          progressBar.style.width = `${progress}%`;
+          
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            progressBar.style.width = '0%';
+            timeLeftEl.textContent = '0:00';
+            
+            finalPushUpCount = getCurrentPushUpCount();
+            
+            freezeCounter();
+            startContinuousConfetti();
+            playSoundAndRedirect(soundEnd, 'score.html', finalPushUpCount);
+            
+            const statusDiv = document.getElementById('status');
+            if (statusDiv) statusDiv.innerHTML = '✅ Session terminée ! 🎉';
+            
+            isSessionActive = false;
+          }
+        }, 1000);
+      }
+
+      const startButton = document.getElementById('btn-start');
+      startButton.addEventListener('click', () => {
+        if (startButton.disabled) return;
+        startButton.disabled = true;
+        
+        setTimeout(() => {
+          startSessionTimer();
+        }, 300);
+      });
+    </script>
+  </body>
+</html>
