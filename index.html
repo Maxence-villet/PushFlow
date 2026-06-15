@@ -176,9 +176,23 @@
     <script type="module" src="src/main.ts"></script>
 
     <script>
+
+      function getBasePath() {
+        // Récupère le chemin du script courant
+        const scripts = document.getElementsByTagName('script');
+        const currentScript = scripts[scripts.length - 1];
+        const src = currentScript.src;
+        // Extrait le chemin jusqu'au dossier parent (peut être adapté)
+        if (src) {
+          const base = src.substring(0, src.lastIndexOf('/') + 1);
+          return base;
+        }
+        return './';
+      }
       // === Sons ===
-      const soundSuccess = new Audio("./sounds/success.mp3");
-      const soundEnd = new Audio("./sounds/end-session.mp3");
+      const basePath = getBasePath();
+      const soundSuccess = new Audio(basePath + 'sounds/success.mp3');
+      const soundEnd = new Audio(basePath + 'sounds/end-session.mp3');
       soundSuccess.volume = 0.8;
       soundEnd.volume = 0.9;
 
