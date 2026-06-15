@@ -4427,10 +4427,10 @@ async function startApplication() {
       soundWarning.pause();
       soundWarning.currentTime = 0;
     }).catch(() => {});
-    const vision = await Zo.forVisionTasks(window.location.origin + "/wasm");
+    const vision = await Zo.forVisionTasks("./wasm");
     poseLandmarker = await Zc.createFromOptions(vision, {
       baseOptions: {
-        modelAssetPath: "/pose_landmarker_lite.task",
+        modelAssetPath: "./wasm/pose_landmarker_lite.task",
         delegate: "CPU"
       },
       runningMode: "VIDEO",
